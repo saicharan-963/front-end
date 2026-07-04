@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #882e2e 0%, #032733 100%);
+            padding: 20px;
+        }
+
+        .calculator-wrapper {
+            position: relative;
+            width: 700px;
+            height: 500px;
+        }
+
+        .result-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: white;
+            padding: 50px 60px;
+            width: 500px;
+            height: 450px;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calculator {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: #3a3a3a;
+            padding: 10px;
+            width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            background-color: black;
+            z-index: 2;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 22px;
+            font-weight: 400;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: black;
+            color: #ffffff;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: black;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .top-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .top-btn {
+            background: black;
+            color: gray;
+            padding: 10px;
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .operator {
+            background: black;
+            color: gray;
+            font-size: 26px;
+            font-weight: 300;
+        }
+
+        .equals {
+            background: black;
+            color: gray;
+            font-size: 26px;
+            font-weight: 300;
+        }
+
+        .calculation {
+            text-align: center;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .calc-expression {
+            font-size: 40px;
+            color: gray;
+            margin-bottom: 15px;
+            font-weight: 300;
+            min-height: 50px;
+        }
+
+        .calc-number {
+            font-size: 36px;
+            color: gray;
+            font-weight: 300;
+            min-height: 45px;
+        }
+
+        .divider {
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            margin: 30px 0;
+        }
+
+        .result {
+            font-size: 64px;
+            color: #333;
+            font-weight: 300;
+        }
+        @media (max-width: 768px) {
+            .calculator-wrapper {
+                width: 100%;
+                height: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .calculator {
+                position: relative;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1;
+                color: black;
+                background-color: black;
+            }
+
+            .result-panel {
+                position: relative;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: auto;
+                z-index: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-wrapper">
+        <div class="result-panel">
+            <div class="calculation">
+                <div class="calc-expression" id="expression"></div>
+                <div class="calc-number" id="current-number"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="result" id="result">0</div>
+        </div>
+
+        <div class="calculator">
+            <div class="top-row">
+                <button class="top-btn" onclick="clearAll()">AC</button>
+                <button class="top-btn" onclick="toggleSign()">+/-</button>
+                <button class="top-btn" onclick="percentage()">%</button>
+                <button class="top-btn operator" onclick="chooseOperation('/')">/</button>
+            </div>
+            <div class="buttons">
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button class="operator" onclick="chooseOperation('*')">×</button>
+                
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button class="operator" onclick="chooseOperation('-')">−</button>
+                
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button class="operator" onclick="chooseOperation('+')">+</button>
+                
+                <button onclick="appendvalue('')"></button>
+                <button onclick="appendNumber('0')">0</button>
+                <button onclick="appendNumber('.')">,</button>
+                <button class="equals" onclick="compute()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentOperand = '';
+        let previousOperand = '';
+        let operation = null;
+        let resultValue = '0';
+
+        const expressionDisplay = document.getElementById('expression');
+        const currentNumberDisplay = document.getElementById('current-number');
+        const resultDisplay = document.getElementById('result');
+
+        function updateDisplay() {
+            if (operation && previousOperand) {
+                expressionDisplay.textContent = previousOperand + ' ' + getOperationSymbol(operation);
+                currentNumberDisplay.textContent = currentOperand || '';
+            } else {
+                expressionDisplay.textContent = currentOperand || previousOperand || '';
+                currentNumberDisplay.textContent = '';
+            }
+            resultDisplay.textContent = resultValue;
+        }
+
+        function getOperationSymbol(op) {
+            const symbols = {'+': '+', '-': '−', '*': '×', '/': '÷'};
+            return symbols[op] || op;
+        }
+
+        function appendNumber(number) {
+            if (number === '.' && currentOperand.includes('.')) return;
+            if (currentOperand === '' && number === '.') {
+                currentOperand = '0.';
+            } else {
+                currentOperand = currentOperand + number;
+            }
+            resultValue = currentOperand;
+            updateDisplay();
+        }
+
+        function chooseOperation(op) {
+            if (currentOperand === '' && previousOperand === '') return;
+            if (previousOperand !== '' && currentOperand !== '') {
+                compute();
+            }
+            operation = op;
+            if (currentOperand !== '') {
+                previousOperand = currentOperand;
+                currentOperand = '';
+            }
+            updateDisplay();
+        }
+
+        function compute() {
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+':
+                    computation = prev + current;
+                    break;
+                case '-':
+                    computation = prev - current;
+                    break;
+                case '*':
+                    computation = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        resultValue = 'Error';
+                        currentOperand = '';
+                        previousOperand = '';
+                        operation = null;
+                        updateDisplay();
+                        return;
+                    }
+                    computation = prev / current;
+                    break;
+                default:
+                    return;
+            }
+            
+            if (computation % 1 === 0) {
+                resultValue = computation.toString();
+            } else {
+                resultValue = computation.toFixed(3).replace(/\.?0+$/, '');
+            }
+            
+            currentOperand = resultValue;
+            operation = null;
+            previousOperand = '';
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentOperand = '';
+            previousOperand = '';
+            operation = null;
+            resultValue = '0';
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (currentOperand) {
+                currentOperand = (parseFloat(currentOperand) * -1).toString();
+                resultValue = currentOperand;
+                updateDisplay();
+            }
+        }
+
+        function percentage() {
+            if (currentOperand) {
+                currentOperand = (parseFloat(currentOperand) / 100).toString();
+                resultValue = currentOperand;
+                updateDisplay();
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            if (e.key === '.') appendNumber(e.key);
+            if (e.key === '+') chooseOperation('+');
+            if (e.key === '-') chooseOperation('-');
+            if (e.key === '*') chooseOperation('*');
+            if (e.key === '/') {
+                e.preventDefault();
+                chooseOperation('/');
+            }
+            if (e.key === 'Enter' || e.key === '=') {
+                e.preventDefault();
+                compute();
+            }
+            if (e.key === 'Escape') clearAll();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
